@@ -4,7 +4,7 @@
 from dash import Dash, dcc, html
 import plotly.express as px
 import pandas as pd
-
+from getdatafromcsv import getData
 stylesheet = ["https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"]
 app = Dash(__name__, external_stylesheets=stylesheet)
 
@@ -15,13 +15,14 @@ colors = {
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
+data = getData()
 df = pd.DataFrame({
     "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
     "Amount": [4, 1, 2, 2, 4, 5],
     "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
 })
 
-fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
+fig = px.line(x=["Week 1", "Week 2", "Week 3"], y=data["Topic1"])
 
 fig.update_layout(
     plot_bgcolor=colors['background'],
@@ -44,7 +45,6 @@ app.layout = html.Div(style={'backgroundColor': colors['background'], "width": "
         },
         className = "navbar navbar-dark bg-dark p-3 text-light"
     ),
-
     html.Div(
     className = "p-3",
     style = {
@@ -61,6 +61,8 @@ app.layout = html.Div(style={'backgroundColor': colors['background'], "width": "
         )
     ]
     ),
+        html.H4(children='Topic 1:',
+            className = "m-3"),
     dcc.Graph(
         id='example-graph-2',
         figure=fig
