@@ -5,6 +5,7 @@ from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 from getdatafromcsv import getData
 stylesheet = ["https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"]
 app = Dash(__name__, external_stylesheets=stylesheet)
@@ -46,21 +47,39 @@ app.layout = html.Div(style={'backgroundColor': colors['background'], "width": "
         className = "navbar navbar-dark bg-dark p-3 text-light"
     ),
     html.Div(
-    className = "p-3",
+    className = "p-3 row w-100",
     style = {
     "textAlign": 'left',
     'color':colors['text']},
     children = [
-        dcc.Input(
-            id="input",
-            className = "form-control",
-            type="text",
-            placeholder="topic",
-            debounce = True,
-            style = {
-            "width": "20%"}
-        )
-    ]
+        html.Div(
+            className = "col-sm",
+            children = [
+            dcc.Input(
+                id="input",
+                className = "form-control col-sm w-50",
+                type="text",
+                placeholder="Topic 1",
+                debounce = True,
+                style = {
+                "width": "20%"}
+            )
+            ]
+        ),
+        html.Div(
+            className = "col-sm",
+            children = [
+            dcc.Input(
+                id="input2",
+                className = "form-control col-sm float-right w-50",
+                type="text",
+                placeholder="Topic 1",
+                debounce = True,
+                style = {
+                "width": "20%"}
+            )
+            ]
+        )]
     ),
         html.H4(children='Presencia del tema:',
             className = "m-3",
@@ -74,10 +93,23 @@ app.layout = html.Div(style={'backgroundColor': colors['background'], "width": "
 ])
 @app.callback(
     Output('graph', 'figure'),
-    Input('input', 'value'))
-def update_graph(topic):
-    new_df = data.get(topic, None)
-    
+    Input('input', 'value'),
+    Input("input2", "value"))
+def update_graph(topic, topic2):
+    new_df1 = data.get(topic, None)
+    new_df2 = data.get(topic2, None)
+    topics = []
+    print(new_df1)
+    if new_df2 is not None:
+        if new_df1 is not None:
+            new_df = {topic: new_df1, topic2: new_df2}
+            topics = [topic, topic2]
+        else:
+            new_df = {topic2: new_df2}
+            topics = [topic2]
+    else:
+        new_df = {topic: new_df1}
+        topics = [topic]
     if new_df is None:
         fig = go.Figure()
         fig.update_layout(
@@ -102,32 +134,10 @@ def update_graph(topic):
             showarrow = False,
         )
         return fig
-        return {
-        "layout": {
-            "tranition_duration": 500,
-            "xaxis": {
-                "visible": False
-            },
-            "yaxis": {
-                "visible": False
-            },
-            "plot_bgcolor": colors["background"],
-            "paper_bgcolor": colors["background"],
-            "annotations": [
-                {
-                    "text": "Tema no encontrado",
-                    "xref": "paper",
-                    "yref": "paper",
-                    "font_color": "#ffffff",
-                    "showarrow": False,
-                    "font": {
-                        "size": 28
-                    }
-                }
-            ]
-        }
-}
-    fig = px.line(x=weeks, y=new_df, markers=True)
+    fig = go.Figure()
+    for topic in topics:
+        fig.add_trace(go.Scatter(x=weeks, y=new_df[topic], name=topic))
+    #fig = px.line(x=weeks, y=new_df, markers=True)
     fig.update_layout(
         transition_duration=500,
         plot_bgcolor=colors['background'],
